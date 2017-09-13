@@ -1,6 +1,12 @@
 defmodule Web.Endpoint do
   use Web, :endpoint
 
+  plug Plug.Static,
+    at: "/",
+    from: Pic.Picture.store_dir("../"),
+    gzip: false,
+    only: ~w(uploads)
+
   plug Plug.RequestId
   plug Plug.Logger
 

@@ -1,18 +1,36 @@
 defmodule Pic do
-  @moduledoc """
-  Documentation for Pic.
-  """
+  alias Pic.Picture
+  alias Pic.Repo
 
-  @doc """
-  Hello world.
+  def list_pictures do
+    Repo.all(Picture)
+  end
 
-  ## Examples
+  def get_picture!(id) do
+    Repo.get!(Picture, id)
+  end
 
-      iex> Pic.hello
-      :world
+  def get_picture_by(opts \\ []) do
+    Repo.get_by(Picture, opts)
+  end
 
-  """
-  def hello do
-    :world
+  def create_picture(attrs \\ %{}) do
+    %Picture{}
+    |> Picture.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_picture(%Picture{} = picture, attrs \\ %{}) do
+    picture
+    |> Picture.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_picture(%Picture{} = picture) do
+    Repo.delete(picture)
+  end
+
+  def change_picture(%Picture{} = picture, attrs \\ %{}) do
+    Picture.changeset(picture, attrs)
   end
 end

@@ -41,8 +41,34 @@ defmodule Web do
     end
   end
 
+  def controller do
+    quote do
+      use Plug.Builder
 
+      import Web.ControllerHelper
 
+      def call(conn, opts) do
+        action = Keyword.fetch!(opts, :action)
 
+        conn =
+          conn
+          |> put_private(:action, action)
+          |> super(opts)
+
+        apply(__MODULE__, action, [conn, conn.params])
+      end
+    end
+  end
+
+  def view do
+    quote do
+      use Plug.Builder
+
+      def call(conn, opts) do
+        conn
+        |> put_private(:view, __MODULE__)
+        |> super(opts)
+      end
+    end
   end
 end
