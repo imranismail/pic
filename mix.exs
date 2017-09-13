@@ -1,4 +1,4 @@
-defmodule Pic.Mixfile do
+defmodule Pic.Umbrella.Mixfile do
   use Mix.Project
 
   def project do
