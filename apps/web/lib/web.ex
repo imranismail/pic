@@ -1,18 +1,48 @@
 defmodule Web do
-  @moduledoc """
-  Documentation for Web.
-  """
+  defmacro __using__(which) when is_atom(which) do
+    apply(__MODULE__, which, [])
+  end
 
-  @doc """
-  Hello world.
+  def router do
+    quote do
+      use Plug.Router
 
-  ## Examples
+      if Mix.env == :dev do
+        use Plug.Debugger
+      end
 
-      iex> Web.hello
-      :world
+      use Plug.ErrorHandler
 
-  """
-  def hello do
-    :world
+      plug :match
+      plug :dispatch
+
+      defp handle_errors(conn, %{kind: _kind, reason: _reason, stack: _stack}) do
+        send_resp(conn, conn.status, "Something went wrong")
+      end
+    end
+  end
+
+  def endpoint do
+    quote do
+      use Plug.Builder
+
+      require Logger
+
+      plug :secret_key
+
+      def secret_key(conn, _) do
+        Map.put(conn, :secret_key, Application.get_env(:web, :secret_key))
+      end
+
+      def start_link do
+        Logger.info "Starting server on http://0.0.0.0:4000"
+        Plug.Adapters.Cowboy.http(__MODULE__, [])
+      end
+    end
+  end
+
+
+
+
   end
 end
