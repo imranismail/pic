@@ -1,6 +1,7 @@
 defmodule Pic do
   alias Pic.Picture
   alias Pic.Repo
+  alias Ecto.Changeset
 
   def list_pictures do
     Repo.all(Picture)
@@ -20,20 +21,24 @@ defmodule Pic do
     |> Repo.insert()
   end
 
-  def stream_create_picture(upload) do
-    temp_dir = Path.join([System.tmp_dir!, "pic-storage-local-storage"])
+  def stream_create_picture(attrs) do
+    temp_dir  = Path.join([System.tmp_dir!, "pic-storage-local-storage"])
+    changeset = change_picture(%Pic.Picture{}, attrs)
+    changeset = Map.put(changeset, :action, :stream_create_picture)
+    file      = Changeset.get_change(changeset, :file)
 
-    upload.path
-    |> File.read!()
-    |> :zip.unzip(cwd: temp_dir)
-    |> case do
-      {:ok, paths} ->
+    with %Changeset{valid?: true} <- changeset,
+         {:ok, paths}             <- :zip.unzip(File.read!(file.path), cwd: temp_dir) do
+      {:ok,
         paths
         |> Enum.filter(&!String.match?(&1, ~r/\_\_MACOSX/))
         |> Enum.map(&Picture.from_path/1)
-        |> Task.async_stream(&Repo.insert!/1, timeout: 15000)
-      {:error, reason} ->
-        raise "#{reason}"
+        |> Task.async_stream(&Repo.insert!/1, timeout: 15000)}
+    else
+      %Changeset{valid?: false} ->
+        {:error, changeset}
+      {:error, reason}          ->
+        {:error, Changeset.add_error(changeset, :file, "#{reason}")}
     end
   end
 

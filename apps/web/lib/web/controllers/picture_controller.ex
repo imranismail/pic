@@ -24,16 +24,15 @@ defmodule Web.PictureController do
     end
   end
 
-  def bulk_create(conn, %{"picture" => %{"file" => upload}}) do
-    pictures =
-      upload
-      |> Pic.stream_create_picture()
-      |> Enum.reduce([], fn {:ok, picture}, acc ->
-        [picture | acc]
-      end)
-      |> Enum.reverse()
-
-    render(conn, "index.json", pictures: pictures)
+  def bulk_create(conn, %{"picture" => params}) do
+    case Pic.stream_create_picture(params) do
+      {:ok, stream} ->
+        render(conn, "index.json", pictures: for {:ok, picture} <- stream do
+          picture
+        end)
+      {:error, changeset} ->
+        render(conn, Web.ErrorView, "error.json", changeset: changeset)
+    end
   end
 
   def delete(conn, %{"id" => id}) do

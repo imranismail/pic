@@ -49,24 +49,23 @@ defmodule Pic.Picture do
   end
 
   def from_path(path) do
-    __MODULE__
-    |> struct()
-    |> changeset(%{
-      id: UUID.generate(),
+    content_type = MIME.from_path(path)
+    extension    = MIME.extensions(content_type) |> List.first()
+    filename     = Path.basename(path, extension)
+
+    changeset(new(), %{
       file: %Plug.Upload{
-        content_type: MIME.from_path(path),
-        filename: Path.basename(path, Path.extname(path)),
+        content_type: content_type,
+        filename: filename,
         path: path
       }
     })
   end
 
   defp save_to_storage(changeset) do
-    id   = get_change(changeset, :id, UUID.generate())
-    path = store_dir(id)
-
-    {:ok, file} = fetch_change(changeset, :file)
-    {:ok, uploaded} = Storage.save(file, at: path)
+    id              = get_change(changeset, :id, UUID.generate())
+    {:ok, file}     = fetch_change(changeset, :file)
+    {:ok, uploaded} = Storage.save(file, at: store_dir(id))
 
     changeset
     |> put_change(:id, id)
