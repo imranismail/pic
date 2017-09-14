@@ -19,13 +19,4 @@ defmodule Web.PictureView do
       url: Picture.url_for(conn, picture)
     }
   end
-
-  def render("bulk.json", %{pictures: pictures}) do
-    Enum.map(pictures, fn picture ->
-      %{
-        id: picture.id,
-        status: picture.status
-      }
-    end)
-  end
 end
