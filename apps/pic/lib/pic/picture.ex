@@ -48,15 +48,28 @@ defmodule Pic.Picture do
     Path.join([@store_dir, path])
   end
 
+  def from_path(path) do
+    __MODULE__
+    |> struct()
+    |> changeset(%{
+      id: UUID.generate(),
+      file: %Plug.Upload{
+        content_type: MIME.from_path(path),
+        filename: Path.basename(path, Path.extname(path)),
+        path: path
+      }
+    })
+  end
+
   defp save_to_storage(changeset) do
-    uuid = UUID.generate()
-    path = store_dir(uuid)
+    id   = get_change(changeset, :id, UUID.generate())
+    path = store_dir(id)
 
     {:ok, file} = fetch_change(changeset, :file)
     {:ok, uploaded} = Storage.save(file, at: path)
 
     changeset
-    |> put_change(:id, uuid)
+    |> put_change(:id, id)
     |> put_change(:content_type, uploaded.content_type)
     |> validate_required([:content_type])
     |> validate_content_type()

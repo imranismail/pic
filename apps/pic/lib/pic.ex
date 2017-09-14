@@ -20,6 +20,23 @@ defmodule Pic do
     |> Repo.insert()
   end
 
+  def stream_create_picture(upload) do
+    temp_dir = Path.join([System.tmp_dir!, "pic-storage-local-storage"])
+
+    upload.path
+    |> File.read!()
+    |> :zip.unzip(cwd: temp_dir)
+    |> case do
+      {:ok, paths} ->
+        paths
+        |> Enum.filter(&!String.match?(&1, ~r/\_\_MACOSX/))
+        |> Enum.map(&Picture.from_path/1)
+        |> Task.async_stream(&Repo.insert!/1, timeout: 15000)
+      {:error, reason} ->
+        raise "#{reason}"
+    end
+  end
+
   def update_picture(%Picture{} = picture, attrs \\ %{}) do
     picture
     |> Picture.changeset(attrs)

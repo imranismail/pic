@@ -10,9 +10,10 @@ defmodule Pic.Application do
 
     # List all child processes to be supervised
     children = [
-      supervisor(Pic.Repo, []),
       # Starts a worker by calling: Pic.Worker.start_link(arg)
       # {Pic.Worker, arg},
+      supervisor(Pic.Repo, []),
+      supervisor(Task.Supervisor, [[name: Pic.TaskSupervisor]]),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

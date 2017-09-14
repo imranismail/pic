@@ -12,7 +12,7 @@ defmodule Web.Application do
     children = [
       # Starts a worker by calling: Web.Worker.start_link(arg)
       # {Web.Worker, arg},
-      supervisor(Web.Endpoint, [])
+      supervisor(Web.Endpoint, []),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

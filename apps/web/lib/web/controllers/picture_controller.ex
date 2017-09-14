@@ -18,8 +18,22 @@ defmodule Web.PictureController do
       {:ok, %Pic.Picture{} = picture} ->
         render(conn, "show.json", picture: picture)
       {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, Web.ErrorView, "error.json", changeset: changeset)
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Web.ErrorView, "error.json", changeset: changeset)
     end
+  end
+
+  def bulk_create(conn, %{"picture" => %{"file" => upload}}) do
+    pictures =
+      upload
+      |> Pic.stream_create_picture()
+      |> Enum.reduce([], fn {:ok, picture}, acc ->
+        [picture | acc]
+      end)
+      |> Enum.reverse()
+
+    render(conn, "index.json", pictures: pictures)
   end
 
   def delete(conn, %{"id" => id}) do
